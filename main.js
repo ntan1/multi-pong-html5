@@ -4,16 +4,9 @@ console.log(canvas);
 // store 2D rendering context; the actual tool we canuse to paint on the canvas
 var ctx = canvas.getContext("2d");
 
-// all paint instructions go between beginPath() and closePath()
-ctx.beginPath();
-ctx.rect(20, 40, 50, 50);
-// x,y coordinates of arc center, arc radius, start and end angle in radians, direction of drawing (false=clockwise)
-ctx.arc(240, 160, 20, 0, Math.PI*2, false);
-ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-ctx.stroke();
-ctx.fillStyle = "#ff0000";
-ctx.fill();
-ctx.closePath();
+//
+var paused = false;
+var pausePressed = false;
 
 // request last animation frame
 var set_fps = 60;
@@ -30,10 +23,9 @@ var ballSpeedPerSecondX = 200;
 var ballSpeedPerSecondY = -200;
 
 // paddle
-var paddleHeight = 10;
+var paddleHeight = ballRadius;
 var paddleWidth = 75;
 var paddleX = (canvas.width-paddleWidth)/2;
-
 var paddleSpeedPerSecond = 300;
 
 // controls
@@ -57,35 +49,46 @@ function drawPaddle() {
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBall();
-    drawPaddle();
+    if(!paused) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBall();
+        drawPaddle();
 
-    dx = ballSpeedPerSecondX * delta;
-    dy = ballSpeedPerSecondY * delta;
+        dx = ballSpeedPerSecondX * delta;
+        dy = ballSpeedPerSecondY * delta;
 
-    if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
-        dx = -dx;
-        ballSpeedPerSecondX = -ballSpeedPerSecondX;
+        // wall detection
+        if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+            dx = -dx;
+            ballSpeedPerSecondX = -ballSpeedPerSecondX;
+        }
+        if(y + dy < ballRadius) {
+            dy = -dy;
+            ballSpeedPerSecondY = -ballSpeedPerSecondY;
+        } else if(y + dy > canvas.height-ballRadius) { // game over detection
+            if((x > paddleX) && (x < paddleX + paddleWidth)) {
+                dy = -dy;
+                ballSpeedPerSecondY = -ballSpeedPerSecondY;
+            } else {
+                // alert("GAME OVER");
+                document.location.reload();
+            }
+
+        }
+        if(rightPressed && paddleX < canvas.width-paddleWidth) {
+            paddleX += paddleSpeedPerSecond * delta;
+        }
+        else if(leftPressed && paddleX > 0) {
+            paddleX -= paddleSpeedPerSecond * delta;
+        }
+
+        x += dx;
+        y += dy;
+
+        requestAnimFrame();
+    } else {
+        lastCalledTime = Date.now();
     }
-    if(y + dy > canvas.height-ballRadius || y + dy < ballRadius) {
-        dy = -dy;
-        ballSpeedPerSecondY = -ballSpeedPerSecondY;
-    }
-
-    if(rightPressed && paddleX < canvas.width-paddleWidth) {
-        // paddleX += 7;
-        paddleX += paddleSpeedPerSecond * delta;
-    }
-    else if(leftPressed && paddleX > 0) {
-        // paddleX -= 7;
-        paddleX -= paddleSpeedPerSecond * delta;
-    }
-
-    x += dx;
-    y += dy;
-
-    requestAnimFrame();
 }
 
 function keyDownHandler(e) {
@@ -95,6 +98,10 @@ function keyDownHandler(e) {
     else if(e.keyCode == 37) {
         leftPressed = true;
     }
+    if(e.keyCode == 32 && !pausePressed) {
+        paused = !paused;
+        pausePressed = true;
+    }
 }
 
 function keyUpHandler(e) {
@@ -103,6 +110,9 @@ function keyUpHandler(e) {
     }
     else if(e.keyCode == 37) {
         leftPressed = false;
+    }
+    if(e.keyCode == 32 && pausePressed) {
+        pausePressed = false;
     }
 }
 
