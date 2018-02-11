@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>gamu</title>
     <style>
     * {
@@ -15,10 +16,18 @@
         display: block;
         margin: 0 auto;
     }
+
+    .score {
+        text-align: center;
+        font-style: "Arial";
+        font-weight: bold;
+        font-size: 2em;
+    }
     </style>
 </head>
 
 <body>
+    <div class="score">Score: <span id="score">0</span></div>
     <canvas id="myCanvas" width="480" height="320"></canvas>
     <script src="main.js"></script>
 </body>
