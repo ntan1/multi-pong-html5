@@ -1,3 +1,8 @@
+// TODO: import graphics and sounds
+// TODO: implement lives
+// TODO: improve collison detection
+
+
 // get reference to canvas
 var canvas = document.getElementById("myCanvas");
 console.log(canvas);
@@ -19,12 +24,13 @@ var rightPressed = false;
 var leftPressed = false;
 
 // ball
-var x = canvas.width/2;
+// var x = canvas.width/2;
+var x = Math.floor(Math.random() * canvas.width + 1);
 var y = canvas.height-30;
 var dx;
 var dy;
 var ballRadius = 10;
-var ballSpeedPerSecondX = 200;
+var ballSpeedPerSecondX = 150;
 var ballSpeedPerSecondY = -200;
 
 // paddle
@@ -89,6 +95,15 @@ function drawBricks() {
     ctx.closePath();
 }
 
+function updateScore() {
+    score++;
+    document.getElementById('score').innerHTML = score;
+}
+
+function gameOver() {
+
+}
+
 function draw() {
     if(!paused) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -99,11 +114,35 @@ function draw() {
         dx = ballSpeedPerSecondX * delta;
         dy = ballSpeedPerSecondY * delta;
 
+        // brick collision detection
+        for(var row=0; row<bricks.length; row++) {
+            for(var col=0; col<bricks[0].length; col++) {
+                var bx = bricks[row][col].x;
+                var by = bricks[row][col].y;
+                if((y > by && y < by + brickHeight) && (x + dx > bx && x + dx < bx + brickWidth)) {
+                    dx = -dx;
+                    ballSpeedPerSecondX = -ballSpeedPerSecondX;
+                    bricks[row][col].x = -1000;
+                    bricks[row][col].y = -1000;
+                    console.log("left or rightside hit");
+                    updateScore();
+                } else if((x > bx && x < bx + brickWidth) && (y + dy > by && y + dy < by + brickHeight)) {
+                    dy = -dy;
+                    ballSpeedPerSecondY = -ballSpeedPerSecondY;
+                    bricks[row][col].x = -1000;
+                    bricks[row][col].y = -1000;
+                    console.log("bottom or top hit");
+                    updateScore();
+                }
+            }
+        }
+
         // wall detection
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
             dx = -dx;
             ballSpeedPerSecondX = -ballSpeedPerSecondX;
         }
+
         if(y + dy < ballRadius) {
             dy = -dy;
             ballSpeedPerSecondY = -ballSpeedPerSecondY;
@@ -111,13 +150,13 @@ function draw() {
             if((x > paddleX) && (x < paddleX + paddleWidth)) {
                 dy = -dy;
                 ballSpeedPerSecondY = -ballSpeedPerSecondY;
-                score++;
             } else {
                 // alert("GAME OVER");
                 document.location.reload();
             }
-
         }
+
+        // movement key detection
         if(rightPressed && paddleX < canvas.width-paddleWidth) {
             paddleX += paddleSpeedPerSecond * delta;
         }
@@ -133,7 +172,6 @@ function draw() {
         lastCalledTime = Date.now();
         drawText("GAME PAUSED", canvas.width/2, canvas.height/2, "red");
     }
-    document.getElementById('score').innerHTML = score;
 }
 
 function keyDownHandler(e) {
