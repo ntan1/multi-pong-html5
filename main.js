@@ -1,6 +1,7 @@
 // TODO: import graphics and sounds
 // TODO: implement lives
-// TODO: improve collison detection
+// TODO: improve brick removal and drawing
+// TODO: improve ball randomization so don't get unwinnable situations
 
 
 // get reference to canvas
@@ -13,6 +14,7 @@ var ctx = canvas.getContext("2d");
 var paused = false;
 var pausePressed = false;
 var score = 0;
+var won = false;
 
 // request last animation frame
 var set_fps = 60;
@@ -25,17 +27,19 @@ var leftPressed = false;
 
 // ball
 // var x = canvas.width/2;
-var x = Math.floor(Math.random() * canvas.width + 1);
-var y = canvas.height-30;
 var dx;
 var dy;
 var ballRadius = 10;
 var ballSpeedPerSecondX = 150;
 var ballSpeedPerSecondY = -200;
+var x = Math.floor(Math.random() * (canvas.width - ballRadius) + ballRadius);
+var y = canvas.height-30;
+var bry;
+var brx;
 
 // paddle
 var paddleHeight = ballRadius;
-var paddleWidth = 75;
+var paddleWidth = 90;
 var paddleX = (canvas.width-paddleWidth)/2;
 var paddleSpeedPerSecond = 300;
 
@@ -87,9 +91,14 @@ function drawBricks() {
     ctx.beginPath();
     for(var row=0; row<bricks.length; row++) {
         for(var col=0; col<bricks[0].length; col++) {
-            // console.log("r:" + row + " c:" + col + " x: "+ bricks[row][col].x + " y: "+ bricks[row][col].y);
-            ctx.strokeStyle = "#0095DD";
-            ctx.strokeRect(bricks[row][col].x, bricks[row][col].y, brickWidth, brickHeight);
+            var bx = bricks[row][col].x;
+            var by = bricks[row][col].y;
+            // console.log("r:" + row + " c:" + col + " x: "+ bx + " y: "+ by);
+            // improve this
+            if(bx > 0 && by > 0) {
+                ctx.strokeStyle = "#0095DD";
+                ctx.strokeRect(bx, by, brickWidth, brickHeight);
+            }
         }
     }
     ctx.closePath();
@@ -104,9 +113,16 @@ function gameOver() {
 
 }
 
+function checkWin() {
+    if(score==brickRows*brickColumns) {
+        won = true;
+    }
+}
+
 function draw() {
-    if(!paused) {
+    if(!paused && !won) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        checkWin();
         drawBall();
         drawPaddle();
         drawBricks();
@@ -114,19 +130,25 @@ function draw() {
         dx = ballSpeedPerSecondX * delta;
         dy = ballSpeedPerSecondY * delta;
 
+        // change sign of ballRadius depending on direction
+        bry = Math.sign(dy) * ballRadius;
+        brx = Math.sign(dx) * ballRadius;
+
         // brick collision detection
         for(var row=0; row<bricks.length; row++) {
             for(var col=0; col<bricks[0].length; col++) {
                 var bx = bricks[row][col].x;
                 var by = bricks[row][col].y;
-                if((y > by && y < by + brickHeight) && (x + dx > bx && x + dx < bx + brickWidth)) {
+                // left and right side detection
+                if((y > by && y < by + brickHeight) && (x + dx + brx > bx && x + dx + brx < bx + brickWidth)) {
                     dx = -dx;
                     ballSpeedPerSecondX = -ballSpeedPerSecondX;
                     bricks[row][col].x = -1000;
                     bricks[row][col].y = -1000;
                     console.log("left or rightside hit");
                     updateScore();
-                } else if((x > bx && x < bx + brickWidth) && (y + dy > by && y + dy < by + brickHeight)) {
+                } // top and bottom detection
+                else if((x > bx && x < bx + brickWidth) && (y + dy + bry > by && y + dy + bry < by + brickHeight)) {
                     dy = -dy;
                     ballSpeedPerSecondY = -ballSpeedPerSecondY;
                     bricks[row][col].x = -1000;
@@ -146,7 +168,7 @@ function draw() {
         if(y + dy < ballRadius) {
             dy = -dy;
             ballSpeedPerSecondY = -ballSpeedPerSecondY;
-        } else if(y + dy > canvas.height-ballRadius) { // paddle hit and game over detection
+        } else if(y + bry > canvas.height-ballRadius) { // paddle hit and game over detection
             if((x > paddleX) && (x < paddleX + paddleWidth)) {
                 dy = -dy;
                 ballSpeedPerSecondY = -ballSpeedPerSecondY;
@@ -168,7 +190,9 @@ function draw() {
         y += dy;
 
         requestAnimFrame();
-    } else {
+    } else if(won) {
+        drawText("YOU HAVE WON", canvas.width/2, canvas.height/2, "red");
+    } else if(paused) {
         lastCalledTime = Date.now();
         drawText("GAME PAUSED", canvas.width/2, canvas.height/2, "red");
     }
