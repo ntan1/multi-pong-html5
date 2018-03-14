@@ -2,7 +2,10 @@
 // TODO: implement lives
 // TODO: improve brick removal and drawing
 // TODO: improve ball randomization so don't get unwinnable situations
-
+// TODO: error checking: brick # doesn't esceed canvas
+// TODO: hiscore
+// TODO: add levels
+// TODO: generate brick layout from image
 
 // get reference to canvas
 var canvas = document.getElementById("myCanvas");
@@ -10,28 +13,37 @@ console.log(canvas);
 // store 2D rendering context; the actual tool we canuse to paint on the canvas
 var ctx = canvas.getContext("2d");
 
-//
+// game settings
 var paused = false;
 var pausePressed = false;
 var score = 0;
 var won = false;
+var startTime = new Date();
+var timeDiff;
 
 // request last animation frame
 var set_fps = 60;
 var lastCalledTime;
 var fps;
 
+// sound effects
+var paddleHit = new Audio("sounds/pong_wall_hit.wav");
+var wallHit = new Audio("sounds/pong_wall_hit.wav");
+var brickHit = new Audio("sounds/pong_paddle_hit.wav");
+var gameOverMusic = new Audio();
+var gameWinMusic = new Audio();
+
 // controls
 var rightPressed = false;
 var leftPressed = false;
 
 // ball
-// var x = canvas.width/2;
 var dx;
 var dy;
 var ballRadius = 10;
 var ballSpeedPerSecondX = 150;
 var ballSpeedPerSecondY = -200;
+// var x = canvas.width/2;
 var x = Math.floor(Math.random() * (canvas.width - ballRadius) + ballRadius);
 var y = canvas.height-30;
 var bry;
@@ -44,13 +56,13 @@ var paddleX = (canvas.width-paddleWidth)/2;
 var paddleSpeedPerSecond = 300;
 
 // bricks
-var brickRows = 3;
-var brickColumns = 6;
-var brickStartX = canvas.width/brickColumns;
-var brickX = brickStartX;
-var brickY = 40;
+var brickRows = 5;
+var brickColumns = 7;
 var brickWidth = 50;
 var brickHeight = 20;
+var brickStartX = (canvas.width-brickColumns*brickWidth)/2;
+var brickX = brickStartX;
+var brickY = 40;
 var bricks = [];
 
 // set bricks
@@ -109,6 +121,13 @@ function updateScore() {
     document.getElementById('score').innerHTML = score;
 }
 
+function updateTime() {
+    endTime = new Date();
+    timeDiff = endTime - startTime;
+    timeDiff /= 1000;
+    document.getElementById('time').innerHTML = timeDiff + "s";
+}
+
 function gameOver() {
 
 }
@@ -122,6 +141,7 @@ function checkWin() {
 function draw() {
     if(!paused && !won) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateTime();
         checkWin();
         drawBall();
         drawPaddle();
@@ -146,6 +166,8 @@ function draw() {
                     bricks[row][col].x = -1000;
                     bricks[row][col].y = -1000;
                     console.log("left or rightside hit");
+                    brickHit.play();
+                    brickHit.currentTime = 0;
                     updateScore();
                 } // top and bottom detection
                 else if((x > bx && x < bx + brickWidth) && (y + dy + bry > by && y + dy + bry < by + brickHeight)) {
@@ -154,24 +176,34 @@ function draw() {
                     bricks[row][col].x = -1000;
                     bricks[row][col].y = -1000;
                     console.log("bottom or top hit");
+                    brickHit.play();
+                    brickHit.currentTime=0;
                     updateScore();
                 }
             }
         }
 
-        // wall detection
+        // wall detection left right
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
             dx = -dx;
             ballSpeedPerSecondX = -ballSpeedPerSecondX;
+            wallHit.play();
+            wallHit.currentTime = 0;
         }
 
+        // wall detection top
         if(y + dy < ballRadius) {
             dy = -dy;
             ballSpeedPerSecondY = -ballSpeedPerSecondY;
-        } else if(y + bry > canvas.height-ballRadius) { // paddle hit and game over detection
+            wallHit.play();
+            wallHit.currentTime = 0;
+        } // paddle hit and game over detection
+        else if(y + bry > canvas.height-ballRadius) {
             if((x > paddleX) && (x < paddleX + paddleWidth)) {
                 dy = -dy;
                 ballSpeedPerSecondY = -ballSpeedPerSecondY;
+                paddleHit.play();
+                paddleHit.currentTime = 0;
             } else {
                 // alert("GAME OVER");
                 document.location.reload();
