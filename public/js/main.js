@@ -2,7 +2,7 @@
 // TODO: implement lives
 // TODO: improve brick removal and drawing
 // TODO: improve ball randomization so don't get unwinnable situations
-// TODO: error checking: brick # doesn't esceed canvas
+// TODO: error checking: brick # doesn't exceed canvas
 // TODO: hiscore
 // TODO: add levels
 // TODO: generate brick layout from image
@@ -41,10 +41,11 @@ var leftPressed = false;
 var dx;
 var dy;
 var ballRadius = 10;
-var ballSpeedPerSecondX = 150;
+var ballDiameter = 2 * ballRadius
+var ballSpeedPerSecondX = 175;
 var ballSpeedPerSecondY = -200;
 // var x = canvas.width/2;
-var x = Math.floor(Math.random() * (canvas.width - ballRadius) + ballRadius);
+var x = Math.floor((Math.random() * (canvas.width - ballDiameter)) + ballDiameter);
 var y = canvas.height-30;
 var bry;
 var brx;
