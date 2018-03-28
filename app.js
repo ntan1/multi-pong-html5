@@ -7,6 +7,8 @@ var express = require('express'),
 	engines = require('consolidate'),
 	ejs = require('ejs');
 
+var port = process.env.PORT || 7000;
+
 app.use(express.static(path.join(__dirname, '/public')));
 app.set('views', __dirname + '/views/');
 app.engine('html', engines.ejs);
@@ -17,7 +19,7 @@ app.get('/', function(req, res, next) {
 	res.render('index.html');
 });
 
-var server = app.listen(7000, function() {
+var server = app.listen(port, function() {
 	var port = server.address().port;
 	console.log("Express listening on port " + port);
 });
