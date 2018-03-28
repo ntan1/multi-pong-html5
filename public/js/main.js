@@ -18,8 +18,7 @@ var paused = false;
 var pausePressed = false;
 var score = 0;
 var won = false;
-var startTime = new Date();
-var timeDiff;
+var current_time = 0;
 
 // request last animation frame
 var set_fps = 60;
@@ -123,10 +122,8 @@ function updateScore() {
 }
 
 function updateTime() {
-    endTime = new Date();
-    timeDiff = endTime - startTime;
-    timeDiff /= 1000;
-    document.getElementById('time').innerHTML = timeDiff + "s";
+    current_time += delta;
+    document.getElementById('time').innerHTML = current_time.toFixed(2) + "s";
 }
 
 function gameOver() {
